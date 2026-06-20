@@ -12,7 +12,6 @@ export default function Game({ playerName }: { playerName: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   let health = 100;
-  let shield = 50;
   let shark = true;
 
   useEffect(() => {
@@ -100,12 +99,49 @@ export default function Game({ playerName }: { playerName: string }) {
     canvas.addEventListener("pointerup", endTouchInput);
     canvas.addEventListener("pointercancel", endTouchInput);
 
+    window.addEventListener("pointerdown", (e) => {
+      if (e.button === 0 && cooldown <= 0) {
+        attackTime = ATTACK_DURATION;
+        cooldown = COOLDOWN_TIME;
+      }
+    });
+
+    const pointer = {
+      x: 0,
+      y: 0,
+    };
+
+    canvas.addEventListener("pointermove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+
+      pointer.x = e.clientX - rect.left;
+      pointer.y = e.clientY - rect.top;
+    });
+
+    function takeDamage(amount: number) {
+      health -= amount;
+      if (health < 0) health = 0;
+    }
+
     let last = performance.now();
     const maxTouchDistance = 90;
+    const touchDeadzone = 8;
+
+    let attackTime = 0;
+    let cooldown = 0;
+
+    const ATTACK_DURATION = 0.15; // seconds
+    const COOLDOWN_TIME = 0.5;    // seconds
 
     function loop(now: number) {
       const dt = (now - last) / 1000;
       last = now;
+
+      attackTime -= dt;
+      cooldown -= dt;
+
+      if (attackTime < 0) attackTime = 0;
+      if (cooldown < 0) cooldown = 0;
 
       let dx = 0;
       let dy = 0;
@@ -119,9 +155,13 @@ export default function Game({ playerName }: { playerName: string }) {
         const touchDx = touchInput.x - touchInput.originX;
         const touchDy = touchInput.y - touchInput.originY;
         const touchDistance = Math.hypot(touchDx, touchDy);
-        const touchStrength = Math.min(1, touchDistance / maxTouchDistance);
 
-        if (touchDistance > 0) {
+        if (touchDistance > touchDeadzone) {
+          const touchStrength = Math.min(
+            1,
+            (touchDistance - touchDeadzone) / (maxTouchDistance - touchDeadzone)
+          );
+
           dx += (touchDx / touchDistance) * touchStrength;
           dy += (touchDy / touchDistance) * touchStrength;
         }
@@ -157,6 +197,9 @@ export default function Game({ playerName }: { playerName: string }) {
         0,
         Math.min(WORLD_HEIGHT - height, player.y - height / 2)
       );
+
+      const pointerWorldX = pointer.x + cameraX;
+      const pointerWorldY = pointer.y + cameraY;
 
       // Background
       ctx.fillStyle = "#181818";
@@ -206,11 +249,11 @@ export default function Game({ playerName }: { playerName: string }) {
       ctx.fillStyle = "#ff0000";
       ctx.fillRect(player.x - cameraX - 50, player.y + PLAYER_SIZE / 2 - cameraY + 10, health, 10);
 
-      ctx.fillStyle = "#0000ff";
-      ctx.fillRect(player.x - cameraX - 50, player.y + PLAYER_SIZE / 2 - cameraY, shield, 10);
-
       const playerImage = new Image();
-      playerImage.src = "/assets/sprites/cat-removebg-preview.png";
+      // playerImage.src = "/assets/sprites/cat-removebg-preview.png";
+      // depends based on shark boolean
+      playerImage.src = shark ? "/assets/sprites/cat-removebg-preview.png"
+        : "/assets/sprites/shark-removebg-preview.png";
       playerImage.width = PLAYER_SIZE;
       playerImage.height = PLAYER_SIZE;
 
@@ -221,6 +264,45 @@ export default function Game({ playerName }: { playerName: string }) {
         PLAYER_SIZE,
         PLAYER_SIZE
       );
+
+      if (keys[" "]) {
+        // show shield (rectangle)
+
+        ctx.fillStyle = "rgba(0, 255, 255, 0.5)";
+        ctx.fillRect(
+          player.x - cameraX - PLAYER_SIZE / 2 - 10,
+          player.y - cameraY - PLAYER_SIZE / 2 - 10,
+          PLAYER_SIZE + 20,
+          PLAYER_SIZE + 20
+        );
+      }
+
+      if (attackTime > 0) {
+        const screenPlayerX = player.x - cameraX;
+        const screenPlayerY = player.y - cameraY;
+
+        const dx = pointer.x - screenPlayerX;
+        const dy = pointer.y - screenPlayerY;
+
+        const length = Math.hypot(dx, dy);
+
+        const dirX = dx / length;
+        const dirY = dy / length;
+
+        const attackLength = 300;
+
+        ctx.strokeStyle = "#ffaa00";
+        ctx.lineWidth = 4;
+
+        ctx.beginPath();
+        ctx.moveTo(screenPlayerX + dirX * 50, screenPlayerY + dirY * 50);
+        ctx.lineTo(
+          screenPlayerX + dirX * attackLength,
+          screenPlayerY + dirY * attackLength
+        );
+        ctx.stroke();
+      }
+
 
       requestAnimationFrame(loop);
     }
