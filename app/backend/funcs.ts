@@ -55,7 +55,8 @@ export async function addPlayer(name: string) {
   };
 }
 
-export async function getGold(shark: boolean) {
+// TODO: SET TO NEW TABLE WITH TEAM GOLD
+export async function getTeamGold(shark: boolean) {
   const { data, error } = await supabase.from("game").select("*");
 
   if (error) {
@@ -72,10 +73,99 @@ export async function getGold(shark: boolean) {
 
   return gold;
 }
+
+export async function setTeamGold(shark: boolean, amount: number) {
+    const { data, error } = await supabase.from("game").select("*");
+}
+
 export async function getSingleGold(uuid:string){
     const {data,error} = await supabase.from('game').select('gold').eq("uuid",uuid).single();
     if (error){
         console.error(error.message);
     }
     return data?.gold;
+}
+
+export async function setSingleGold(uuid:string, amount:number) {
+    const { data, error } = await supabase.from("game").update({ gold: amount }).eq("uuid", uuid);
+
+    if (error) {
+        console.error(error.message);
+    }
+
+    return data;
+}
+
+export async function getShield(uuid: string) {
+    const { data, error } = await supabase.from("game").select("shield").eq("uuid", uuid).single();
+
+    if (error) {
+        console.error(error.message);
+    }
+
+    return data?.shield;
+}
+
+export async function setShield(uuid: string, shieldUp: boolean) {
+    const { data, error } = await supabase.from("game").update({ shield: shieldUp }).eq("uuid", uuid);
+
+    if (error) {
+        console.error(error.message);
+    }
+
+    return data;
+}
+
+export async function getPosition(uuid: string) {
+    const { data, error } = await supabase.from("game").select("positionX, positionY").eq("uuid", uuid).single();
+
+    if (error) {
+        console.error(error.message);
+    }
+
+    return data ? { x: data.positionX, y: data.positionY } : null;
+}
+
+export async function setPosition(uuid: string, position: { x: number; y: number }) {
+    const { data, error } = await supabase.from("game").update({ positionX: position.x, positionY: position.y }).eq("uuid", uuid);
+
+    if (error) {
+        console.error(error.message);
+    }
+
+    return data;
+}
+
+export async function getName(uuid: string) {
+    const { data, error } = await supabase.from("game").select("name").eq("uuid", uuid).single();
+
+    if (error) {
+        console.error(error.message);
+    }
+
+    return data?.name;
+}
+
+export async function setName(uuid: string, name: string) {
+    const { data, error } = await supabase.from("game").update({ name }).eq("uuid", uuid);
+
+    if (error) {
+        console.error(error.message);
+    }
+
+    return data;
+}
+
+export async function getUUID(uuid: string) {
+    return uuid;
+}
+
+export async function setUUID(uuid: string, newUUID: string) {
+    const { data, error } = await supabase.from("game").update({ uuid: newUUID }).eq("uuid", uuid);
+
+    if (error) {
+        console.error(error.message);
+    }
+
+    return data;
 }
