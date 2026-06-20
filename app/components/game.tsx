@@ -6,10 +6,12 @@ const WORLD_WIDTH = 3000;
 const WORLD_HEIGHT = 3000;
 
 const PLAYER_SIZE = 100;
-const PLAYER_SPEED = 350; // pixels/sec
+const PLAYER_SPEED = 1000; // pixels/sec
 
 export default function Game() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  let shark = true;
 
   useEffect(() => {
     const canvas = canvasRef.current!;
@@ -129,19 +131,9 @@ export default function Game() {
         WORLD_HEIGHT
       );
 
-      // // Player
-      // ctx.fillStyle = "#4ade80";
-      // ctx.fillRect(
-      //   player.x - PLAYER_SIZE / 2 - cameraX,
-      //   player.y - PLAYER_SIZE / 2 - cameraY,
-      //   PLAYER_SIZE,
-      //   PLAYER_SIZE
-      // );
-
-      // replace with sprite
 
       const playerImage = new Image();
-      playerImage.src = "/assets/sprites/cat-removebg-preview.png";
+      playerImage.src = `/assets/sprites/${shark ? "shark" : "cat"}-removebg-preview.png`;
       playerImage.width = PLAYER_SIZE;
       playerImage.height = PLAYER_SIZE;
 
