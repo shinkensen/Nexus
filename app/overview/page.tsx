@@ -55,7 +55,7 @@ export default function Overview() {
         shark.src = "/assets/sprites/shark-removebg-preview.png";
 
         const shield = new Image();
-        shield.src = "/assets/sprites/shield.png";
+        shield.src = "/assets/objects/box-removebg-preview.png";
 
         const map = new Image();
         map.src = "/assets/map/combined_sides.png";
@@ -81,18 +81,6 @@ export default function Overview() {
         };
 
         loadPlayers();
-
-        async function loadGold() {
-            const [sharks, cats] = await Promise.all([
-                getTeamGold(true),
-                getTeamGold(false),
-            ]);
-
-            setSharkGold(sharks ?? 0);
-            setCatGold(cats ?? 0);
-        }
-
-        loadGold();
 
         const channel = supabase
             .channel("overview-game-realtime")
@@ -245,6 +233,17 @@ export default function Overview() {
                     screenY - 8
                 );
             }
+
+            if (player.gold > 0) {
+                ctx.fillStyle = "gold";
+                ctx.font = "14px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText(
+                    `Gold: ${player.gold}`,
+                    screenX + PLAYER_SIZE / 2,
+                    screenY + PLAYER_SIZE + 16
+                );
+            }
         };
 
         const render = () => {
@@ -264,12 +263,12 @@ export default function Overview() {
             }
 
             ctx.fillText(
-                `Sharks Gold: ${getTeamGold(true)}`,
+                `Sharks Gold: ${sharkGold}`,
                 10,
                 canvas.height - 20
             );
             ctx.fillText(
-                `Cats Gold: ${getTeamGold(false)}`,
+                `Cats Gold: ${catGold}`,
                 canvas.width - 100,
                 canvas.height - 20
             );  
